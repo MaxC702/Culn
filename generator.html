@@ -30,13 +30,17 @@
   --border: rgba(255,255,255,0.08);
   --font-d: 'Barlow Condensed', sans-serif;
   --font-b: 'DM Sans', sans-serif;
+  --nav-h: 68px;
 }
 html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--white); font-family: var(--font-b); font-size: 15px; line-height: 1.6; overflow-x: hidden; min-height: 100vh; }
+body { background: var(--bg); color: var(--white); font-family: var(--font-b); font-size: 15px; line-height: 1.6; overflow-x: hidden; min-height: 100vh; padding-top: var(--nav-h); }
 
 /* NAV */
 nav {
-  position: sticky; top: 0; z-index: 100;
+  /* fixed, not sticky: body is the scroll container, and a sticky nav with a
+     backdrop-filter drifts during momentum scrolling in iOS WKWebView */
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-h);
   padding: 16px 40px;
   display: flex; align-items: center; justify-content: space-between;
   background: rgba(10,10,10,0.9);
@@ -52,7 +56,7 @@ nav {
 .app-layout {
   display: grid;
   grid-template-columns: 340px 1fr;
-  min-height: calc(100vh - 57px);
+  min-height: calc(100vh - var(--nav-h));
 }
 
 /* SIDEBAR */
@@ -186,6 +190,7 @@ input[type=range]::-webkit-slider-thumb {
 
 .generate-btn {
   width: 100%;
+  margin-top: auto; /* pushes Generate/Settings/Profile to the bottom of the sidebar */
   font-family: var(--font-d);
   font-size: 18px;
   font-weight: 900;
@@ -445,6 +450,48 @@ input[type=range]::-webkit-slider-thumb {
 .meal-group-body .meal-card:last-child { border-bottom: none; }
 .meal-group-body .meal-card:hover { transform: none; border-color: rgba(200,241,53,0.2); }
 
+/* FAVOURITES */
+.favorites-section { display: none; margin-top: 28px; }
+.favorites-section.show { display: block; }
+.favorites-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.favorites-title {
+  font-family: var(--font-d); font-size: 18px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--white);
+}
+.favorites-count {
+  font-family: var(--font-d); font-size: 12px; font-weight: 700;
+  background: rgba(200,241,53,0.12); color: var(--lime);
+  border-radius: 20px; padding: 2px 10px;
+}
+.favorites-list { display: flex; flex-direction: column; gap: 8px; }
+.fav-empty { font-size: 13px; color: var(--gray); font-weight: 300; }
+.fav-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; cursor: pointer;
+  background: var(--bg2);
+  border: 0.5px solid var(--border); border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.fav-row:hover { border-color: rgba(200,241,53,0.25); }
+.fav-row.previewing { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.35); }
+.fav-row-main { flex: 1; min-width: 0; }
+.fav-row-name { font-family: var(--font-d); font-size: 15px; font-weight: 700; color: var(--white); }
+.fav-row-macros { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.fav-remove {
+  background: none; border: none; color: var(--gray);
+  font-size: 15px; cursor: pointer; padding: 4px 6px; line-height: 1;
+}
+.fav-remove:hover { color: var(--white); }
+
+.fav-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 17px; line-height: 1; padding: 2px 4px;
+  color: rgba(255,255,255,0.25);
+  transition: color 0.2s, transform 0.15s;
+}
+.fav-btn:hover { transform: scale(1.15); color: rgba(255,255,255,0.5); }
+.fav-btn.is-fav { color: var(--lime); }
+
 /* MEAL CARD */
 .meal-card {
   background: var(--bg2);
@@ -457,7 +504,24 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .meal-card:hover { border-color: rgba(200,241,53,0.25); transform: translateY(-2px); }
+.meal-card { cursor: pointer; }
+.meal-card:active { background: rgba(200,241,53,0.04); }
 .meal-card.added { border-color: rgba(200,241,53,0.5); }
+.meal-card.previewing { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.35); }
+
+/* footer affordance: "Tap to add" flips to "✓ Added to day" once tapped */
+.meal-add-hint {
+  margin-left: auto;
+  font-family: var(--font-d);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.meal-added-mark { display: none; color: var(--lime); }
+.meal-card.added .meal-add-hint { font-size: 0; }
+.meal-card.added .meal-added-mark { display: inline; font-size: 12px; }
 
 .meal-card-top {
   padding: 20px 20px 16px;
@@ -492,6 +556,7 @@ input[type=range]::-webkit-slider-thumb {
   letter-spacing: 0.02em;
   line-height: 1.1;
   margin-bottom: 6px;
+  padding-right: 72px; /* clear the absolutely-positioned .meal-cost */
 }
 
 .meal-desc {
@@ -546,9 +611,11 @@ input[type=range]::-webkit-slider-thumb {
   padding: 14px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
   margin-top: auto;
 }
+.meal-card-footer .ingredients-toggle { white-space: nowrap; }
 
 .prep-time {
   font-size: 12px;
@@ -1391,12 +1458,12 @@ select.ob-input option { background: #1a1a1a; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 36px 28px;
-  gap: 28px;
+  padding: 48px 36px 36px;
+  gap: 32px;
 }
 .ring-container {
   position: relative;
-  width: 280px; height: 280px;
+  width: 340px; height: 340px;
   flex-shrink: 0;
 }
 .ring-svg {
@@ -1405,7 +1472,7 @@ select.ob-input option { background: #1a1a1a; }
 }
 .ring-track {
   fill: none;
-  stroke: rgba(255,255,255,0.06);
+  stroke: rgba(255,255,255,0.10);
   stroke-width: 14;
 }
 .ring-prog {
@@ -1414,6 +1481,32 @@ select.ob-input option { background: #1a1a1a; }
   stroke-linecap: round;
   transition: stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1);
 }
+/* "what if" arcs — same colour as the real ring but faded, sitting underneath
+   .ring-prog so the solid part is what you ate and the faded tail is what this
+   meal would add */
+.ring-preview {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+}
+.ring-preview.show { opacity: 0.38; }
+/* thin so it reads as a start tick rather than slicing the arcs in half */
+.ring-start {
+  stroke: rgba(255,255,255,0.75);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* A round cap extends half the stroke width (7 units) BACK past the arc's start,
+   so every ring bulged out to the left of the 12 o'clock marker. Nudge each arc
+   forward by its own cap angle — (7 / r) radians — so they all begin flush with
+   the line. Different radius, different angle, hence one rule per ring. */
+#ring-cal,  #prev-cal  { transform: rotate(3.856deg);  transform-origin: 120px 120px; }
+#ring-pro,  #prev-pro  { transform: rotate(4.663deg);  transform-origin: 120px 120px; }
+#ring-carb, #prev-carb { transform: rotate(5.898deg);  transform-origin: 120px 120px; }
+#ring-fat,  #prev-fat  { transform: rotate(8.021deg);  transform-origin: 120px 120px; }
 .ring-center-text {
   position: absolute;
   inset: 0;
@@ -1425,11 +1518,12 @@ select.ob-input option { background: #1a1a1a; }
 }
 .ring-pct {
   font-family: var(--font-d);
-  font-size: 40px; font-weight: 900;
+  font-size: 52px; font-weight: 900;
   color: var(--white);
   line-height: 1;
   letter-spacing: -0.02em;
 }
+.ring-pct.projected { color: rgba(255,255,255,0.62); }
 .ring-pct-label {
   font-size: 9px;
   color: var(--gray);
@@ -1467,6 +1561,54 @@ select.ob-input option { background: #1a1a1a; }
   color: var(--white);
 }
 .ring-legend-val span { color: var(--gray-light); }
+/* what the meal you just tapped did to the day */
+.ring-impact {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  max-width: 320px;
+  padding: 12px 18px;
+  border: 0.5px solid rgba(200,241,53,0.3);
+  background: rgba(200,241,53,0.07);
+  border-radius: 10px;
+}
+.ring-impact.show { display: flex; animation: fadeInUp 0.35s ease both; }
+.impact-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray); }
+.impact-name { font-family: var(--font-d); font-size: 15px; font-weight: 700; color: var(--white); }
+.impact-add { font-size: 13px; font-weight: 600; color: var(--lime); }
+.impact-share { font-size: 12px; color: var(--gray); }
+.impact-done { margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--lime); }
+.impact-confirm {
+  margin-top: 8px;
+  font-family: var(--font-d);
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--lime); color: #0a0a0a;
+  border: none; border-radius: 7px;
+  padding: 9px 18px; cursor: pointer;
+}
+.impact-confirm:hover { background: var(--lime-dark); }
+
+/* jump straight to the meal list instead of scrolling past the hero each time */
+.jump-to-meals {
+  display: none;
+  align-items: center; justify-content: center; gap: 8px;
+  width: 100%; max-width: 340px;
+  padding: 11px 16px;
+  background: var(--bg3);
+  border: 0.5px solid var(--border);
+  border-radius: 9px;
+  color: var(--gray-light);
+  font-family: var(--font-d);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer;
+}
+.jump-to-meals.show { display: flex; }
+.jump-to-meals:hover { border-color: rgba(200,241,53,0.3); color: var(--white); }
+
 .ring-hint {
   font-size: 13px;
   color: var(--gray);
@@ -1479,7 +1621,7 @@ select.ob-input option { background: #1a1a1a; }
 /* SIDEBAR SECTIONS */
 .sidebar-section { padding-bottom: 20px; }
 .sidebar-account {
-  margin-top: auto;
+  margin-top: 0;
   padding-top: 16px;
   border-top: 0.5px solid var(--border);
   display: flex;
@@ -1651,6 +1793,7 @@ select.ob-input option { background: #1a1a1a; }
 /* SETTINGS BUTTON */
 .settings-btn {
   width: 100%;
+  margin-top: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1790,20 +1933,47 @@ select.settings-input option { background: #1a1a1a; }
 
   /* ── MOBILE ── */
   @media (max-width: 768px) {
+    :root { --nav-h: 64px; }
     .app-layout { grid-template-columns: 1fr; }
+    /* Compact action bar. Was max-height:50vh + 55vh of padding, which reserved
+       over half the screen and clipped the ring hero. */
     .sidebar {
       position: fixed; bottom: 0; left: 0; right: 0;
-      flex-direction: row; flex-wrap: wrap;
-      max-height: 50vh; overflow-y: auto;
+      flex-direction: row; flex-wrap: wrap; align-items: center;
+      max-height: none; overflow: visible;
       border-top: 1px solid #222; border-right: none;
-      z-index: 200; padding: 16px;
-      gap: 12px;
+      z-index: 200;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      gap: 8px;
     }
-    .sidebar > div, .sidebar > .divider { flex: 1 1 45%; }
-    .sidebar > button.generate-btn { flex: 1 1 100%; }
-    .main-content { padding-bottom: 55vh; }
+    /* identity already shows in .sidebar-account below; the full card is desktop-only */
+    .sidebar > .divider, .sidebar > .sidebar-section { display: none; }
+    .sidebar > button.generate-btn { flex: 1 1 100%; margin-top: 0; font-size: 16px; padding: 14px; }
+    .sidebar > button.settings-btn { flex: 0 0 auto; width: auto; margin-top: 0; padding: 10px 14px; }
+    .sidebar-account { flex: 1 1 auto; margin-top: 0; padding-top: 0; border-top: none; justify-content: flex-end; }
+    .main-content { padding-bottom: 150px; }
     .tracker-bar { padding: 10px 16px; gap: 14px; }
     .meals-area { padding: 16px; }
+    /* wrap onto two rows instead of clipping off the right edge.
+       position:static because the bar sticks to .main-content's scrollport while
+       nav sticks to the window — two separate contexts, so a stuck bar slides
+       under the nav. Not worth pinning 170px of bar on a phone anyway. */
+    .macro-bar { position: static; flex-wrap: wrap; gap: 10px 14px; padding: 12px 16px; overflow-x: visible; }
+    .macro-hero { border-right: none; padding-right: 0; flex: 0 1 auto; }
+    .macro-bar-aside { margin-left: auto; }
+    .macro-stats { order: 3; flex: 1 1 100%; justify-content: space-between; gap: 10px; }
+    .macro-hero-num { font-size: 28px; }
+    .macro-stat-val { font-size: 22px; }
+    /* keep the hero ring inside a phone viewport */
+    .ring-section { padding: 24px 16px 20px; gap: 20px; }
+    .ring-container { width: min(280px, 78vw); height: min(280px, 78vw); }
+    .ring-pct { font-size: 42px; }
+    .ring-legend { gap: 12px 20px; }
+    /* footer has 5 items — let it breathe rather than wrap mid-word */
+    .meal-card-footer { padding: 12px 16px; gap: 8px 10px; }
+    .meal-card-footer .ingredients-toggle { font-size: 11px; letter-spacing: 0.04em; }
+    .meal-card-footer .prep-time { font-size: 11px; }
+    .meal-add-hint { margin-left: auto; font-size: 11px; }
     .meals-grid { grid-template-columns: 1fr; }
     nav { padding: 14px 20px; }
   }
@@ -1813,9 +1983,6 @@ select.settings-input option { background: #1a1a1a; }
 
 <nav>
   <a href="index.html" class="logo">CULN <span>FITNESS</span></a>
-  <div class="nav-right">
-    <div class="nav-tag">Meal Generator</div>
-  </div>
 </nav>
 
 <!-- AUTH GATE -->
@@ -2235,6 +2402,25 @@ select.settings-input option { background: #1a1a1a; }
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
+    <button class="generate-btn" id="gen-btn" onclick="generatePlan()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="gen-icon">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      Generate Plan
+    </button>
+
+    <button class="settings-btn favorites-btn" onclick="toggleFavoritesPanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Favourites
+    </button>
+
+    <button class="settings-btn" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+
+    <div class="divider"></div>
+
     <!-- Profile -->
     <div class="sidebar-section">
       <div class="sidebar-title">Profile</div>
@@ -2248,20 +2434,6 @@ select.settings-input option { background: #1a1a1a; }
         </div>
       </div>
     </div>
-
-    <div class="divider"></div>
-
-    <button class="generate-btn" id="gen-btn" onclick="generatePlan()" style="margin-top:20px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="gen-icon">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
-      Generate Plan
-    </button>
-
-    <button class="settings-btn" onclick="openSettings()" style="margin-top:12px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </button>
 
     <!-- Account -->
     <div class="sidebar-account">
@@ -2307,10 +2479,7 @@ select.settings-input option { background: #1a1a1a; }
       </div>
     </div>
 
-    <!-- MEALS AREA -->
-    <div class="meals-area" id="meals-area">
-
-      <!-- Daily Progress Rings -->
+    <!-- DAILY PROGRESS RINGS (hero) -->
       <div class="ring-section" id="ring-section">
         <div class="ring-container">
           <svg class="ring-svg" viewBox="0 0 240 240">
@@ -2318,11 +2487,17 @@ select.settings-input option { background: #1a1a1a; }
             <circle class="ring-track" cx="120" cy="120" r="86"/>
             <circle class="ring-track" cx="120" cy="120" r="68"/>
             <circle class="ring-track" cx="120" cy="120" r="50"/>
+            <!-- hypothetical totals, drawn under the real arcs so only the extension shows -->
+            <circle class="ring-preview" id="prev-cal" cx="120" cy="120" r="104" stroke="#c8f135"/>
+            <circle class="ring-preview" id="prev-pro" cx="120" cy="120" r="86" stroke="#60a5fa"/>
+            <circle class="ring-preview" id="prev-carb" cx="120" cy="120" r="68" stroke="#fb923c"/>
+            <circle class="ring-preview" id="prev-fat" cx="120" cy="120" r="50" stroke="#e879f9"/>
             <circle class="ring-prog" id="ring-cal" cx="120" cy="120" r="104" stroke="#c8f135"/>
             <circle class="ring-prog" id="ring-pro" cx="120" cy="120" r="86" stroke="#60a5fa"/>
             <circle class="ring-prog" id="ring-carb" cx="120" cy="120" r="68" stroke="#fb923c"/>
             <circle class="ring-prog" id="ring-fat" cx="120" cy="120" r="50" stroke="#e879f9"/>
-            <line x1="163" y1="120" x2="231" y2="120" stroke="#ffffff" stroke-width="5" stroke-linecap="butt"/>
+            <!-- 12 o'clock start marker (svg is rotated -90deg, so +x is up) -->
+            <line class="ring-start" x1="163" y1="120" x2="231" y2="120"/>
           </svg>
           <div class="ring-center-text">
             <div class="ring-pct" id="ring-pct">0%</div>
@@ -2361,8 +2536,18 @@ select.settings-input option { background: #1a1a1a; }
           </div>
         </div>
 
+        <div class="ring-impact" id="ring-impact"></div>
+
+        <button class="jump-to-meals" id="jump-to-meals" onclick="scrollToPlan()">
+          Jump to meals
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
         <p class="ring-hint" id="ring-hint">Generate a plan and add meals to fill your rings.</p>
       </div>
+
+    <!-- MEALS AREA -->
+    <div class="meals-area" id="meals-area">
 
       <div class="loading-state" id="loading-state" style="display:none">
         <div class="loading-ring"></div>
@@ -2378,11 +2563,19 @@ select.settings-input option { background: #1a1a1a; }
             <div class="plan-summary" id="plan-summary">Today's Meals</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button class="add-all-btn" onclick="addAllMeals()">+ Add All to Tracker</button>
             <button class="regen-btn" onclick="generatePlan()" title="Generate a different plan">↺ Try Again</button>
           </div>
         </div>
         <div class="meals-grid" id="meals-grid"></div>
+      </div>
+
+      <!-- FAVOURITES -->
+      <div class="favorites-section" id="favorites-section">
+        <div class="favorites-header">
+          <span class="favorites-title">Favourites</span>
+          <span class="favorites-count" id="fav-count">0</span>
+        </div>
+        <div class="favorites-list" id="favorites-list"></div>
       </div>
     </div>
 
@@ -2393,6 +2586,32 @@ select.settings-input option { background: #1a1a1a; }
 const SUPABASE_URL = 'https://ezmyikwcyfelidpqixpl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bXlpa3djeWZlbGlkcHFpeHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NDkxMDQsImV4cCI6MjA5NTIyNTEwNH0.i2zPag81gBK1cQdvrspbg032mj8kG8Z8zr2hVE8dyWQ';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// DEV MODE — skips the login screen so you can build/test locally without an account.
+// Profile is saved to this browser only (localStorage), not the cloud.
+// Set this to false before you deploy to a real URL.
+const DEV_MODE = true;
+
+// Seeded automatically in dev mode when no profile is stored, so a fresh
+// browser (or a simulator reinstall, which wipes localStorage) lands straight
+// on the dashboard instead of the 5-step onboarding. Edit freely — it only
+// ever applies when DEV_MODE is true.
+const DEV_DEFAULT_PROFILE = {
+  id: 'dev-local',
+  height_cm: 178,
+  weight_kg: 75,
+  goal: 'cut',
+  age: 28,
+  sex: 'male',
+  activity_level: 'moderate',
+  weekly_budget_usd: 100,
+  dietary: 'none',
+  allergies: '',
+  cuisine: 'any',
+  cooking_time: 30,
+  units: 'imperial',
+  updated_at: new Date().toISOString()
+};
 
 let authMode = 'signup';
 
@@ -2462,20 +2681,22 @@ async function submitEmailAuth() {
 
   if (authMode === 'signup') {
     const { error } = await sb.auth.signUp({ email, password });
-    if (error) { showAuthError(error.message); }
-    else {
+    if (error) {
+      showAuthError(error.message);
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    } else {
       btn.textContent = 'Check your email to confirm!';
       btn.style.background = 'rgba(200,241,53,0.15)';
       btn.style.color = 'var(--lime)';
     }
   } else {
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { showAuthError(error.message); }
-  }
-
-  if (document.getElementById('auth-error').style.display !== 'block') {
-    btn.disabled = false;
-    btn.textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
+    if (error) {
+      showAuthError(error.message);
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
   }
 }
 
@@ -2690,9 +2911,9 @@ async function submitOnboarding() {
     return;
   }
 
-  const { data: { user } } = await sb.auth.getUser();
+  const { data: { user } } = DEV_MODE ? { data: { user: null } } : await sb.auth.getUser();
   const profile = {
-    id: user.id,
+    id: user ? user.id : 'dev-local',
     height_cm: ob.height_cm,
     weight_kg: ob.weight_kg,
     goal: ob.goal,
@@ -2707,6 +2928,20 @@ async function submitOnboarding() {
     units: currentUnits,
     updated_at: new Date().toISOString()
   };
+
+  // In dev mode, save to this browser only — no cloud, no auth required.
+  if (DEV_MODE) {
+    localStorage.setItem('culn_dev_profile', JSON.stringify(profile));
+    userProfile = profile;
+    document.getElementById('onboarding-gate').classList.remove('active');
+    const goalMap = { cut: 'cut', maintain: 'maintain', gain: 'bulk' };
+    const matchedGoal = goalMap[ob.goal] || 'maintain';
+    const goalBtn = document.querySelector(`.goal-btn[data-goal="${matchedGoal}"]`);
+    if (goalBtn) setGoal(matchedGoal, goalBtn);
+    updateSidebarProfile(userProfile, 'dev@local');
+    updateMacroBar();
+    return;
+  }
 
   const { error } = await sb.from('profiles').upsert(profile);
 
@@ -2734,11 +2969,48 @@ async function loadProfile(userId) {
   return data;
 }
 
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  setAuthState(session);
-  sb.auth.onAuthStateChange((_event, session) => setAuthState(session));
-})();
+function enterDevMode() {
+  document.getElementById('auth-gate').style.display = 'none';
+  let saved = localStorage.getItem('culn_dev_profile');
+  if (!saved) {
+    saved = JSON.stringify(DEV_DEFAULT_PROFILE);
+    localStorage.setItem('culn_dev_profile', saved);
+  }
+  const profile = saved ? JSON.parse(saved) : null;
+  userProfile = profile;
+  updateSidebarProfile(profile, 'dev@local');
+  const onboardingGate = document.getElementById('onboarding-gate');
+  if (!profile || !profile.goal || !profile.weekly_budget_usd) {
+    onboardingGate.classList.add('active');
+  } else {
+    onboardingGate.classList.remove('active');
+    const goalMap = { cut: 'cut', maintain: 'maintain', gain: 'bulk' };
+    const matchedGoal = goalMap[profile.goal] || 'maintain';
+    const goalBtn = document.querySelector(`.goal-btn[data-goal="${matchedGoal}"]`);
+    if (goalBtn) setGoal(matchedGoal, goalBtn);
+    updateMacroBar();
+  }
+}
+
+function startApp() {
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session && DEV_MODE) { enterDevMode(); return; }
+    setAuthState(session);
+    sb.auth.onAuthStateChange((_event, session) => setAuthState(session));
+  })();
+}
+
+// Must wait for the later <script> block to run: enterDevMode() -> updateMacroBar()
+// -> calcMacros() reads `currentGoal`, which is declared with `let` further down
+// and is in the temporal dead zone until then. Starting earlier threw
+// "currentGoal is not defined" on every load, leaving the macro targets as "—".
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { startApp(); loadFavorites(); });
+} else {
+  startApp();
+  loadFavorites();
+}
 </script>
 
 <script>
@@ -2747,10 +3019,10 @@ let tracker = { cal: 0, protein: 0, carbs: 0, fat: 0, cost: 0 };
 let currentMeals = [];
 
 const RING_DATA = [
-  { ringId: 'ring-cal',  legId: 'leg-cal',  legTId: 'leg-cal-t',  r: 104, trackerKey: 'cal',     macroKey: 'calories', unit: ''  },
-  { ringId: 'ring-pro',  legId: 'leg-pro',  legTId: 'leg-pro-t',  r: 86,  trackerKey: 'protein',  macroKey: 'protein',  unit: 'g' },
-  { ringId: 'ring-carb', legId: 'leg-carb', legTId: 'leg-carb-t', r: 68,  trackerKey: 'carbs',    macroKey: 'carbs',    unit: 'g' },
-  { ringId: 'ring-fat',  legId: 'leg-fat',  legTId: 'leg-fat-t',  r: 50,  trackerKey: 'fat',      macroKey: 'fat',      unit: 'g' },
+  { ringId: 'ring-cal',  prevId: 'prev-cal',  legId: 'leg-cal',  legTId: 'leg-cal-t',  r: 104, trackerKey: 'cal',     macroKey: 'calories', unit: ''  },
+  { ringId: 'ring-pro',  prevId: 'prev-pro',  legId: 'leg-pro',  legTId: 'leg-pro-t',  r: 86,  trackerKey: 'protein',  macroKey: 'protein',  unit: 'g' },
+  { ringId: 'ring-carb', prevId: 'prev-carb', legId: 'leg-carb', legTId: 'leg-carb-t', r: 68,  trackerKey: 'carbs',    macroKey: 'carbs',    unit: 'g' },
+  { ringId: 'ring-fat',  prevId: 'prev-fat',  legId: 'leg-fat',  legTId: 'leg-fat-t',  r: 50,  trackerKey: 'fat',      macroKey: 'fat',      unit: 'g' },
 ];
 
 function initRings() {
@@ -2791,11 +3063,9 @@ function setGoal(goal, el) {
 function resetTracker() {
   tracker = { cal: 0, protein: 0, carbs: 0, fat: 0, cost: 0 };
   updateTrackerUI();
-  document.querySelectorAll('.add-meal-btn').forEach(b => {
-    b.textContent = 'Add to Day';
-    b.classList.remove('added-state');
-  });
   document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('added'));
+  const impact = document.getElementById('ring-impact');
+  if (impact) impact.classList.remove('show');
 }
 
 function updateTrackerUI() {
@@ -2807,35 +3077,193 @@ function updateTrackerUI() {
   updateRings();
 }
 
-function addMealToTracker(mealIndex, btn, card) {
-  if (btn.classList.contains('added-state')) return;
-  const meal = currentMeals[mealIndex];
+// Tapping a card previews the meal — nothing is committed to the day until the
+// user confirms in the impact panel.
+let previewKey = null;      // identifies what's being previewed ('plan-3', 'fav-1')
+let previewMealObj = null;  // the meal itself, so favourites work the same way
+let previewCard = null;     // element to mark 'added' on confirm, if any
+
+function onMealCardClick(e, mealIndex) {
+  if (e.target.closest('.ingredients-toggle') || e.target.closest('.fav-btn')) return;
+  const card = document.getElementById('meal-card-' + mealIndex);
+  previewMeal(currentMeals[mealIndex], 'plan-' + mealIndex, card);
+}
+
+function previewMeal(meal, key, cardEl) {
+  if (!meal) return;
+  if (previewKey === key) { clearPreview(); return; }
+  previewKey = key;
+  previewMealObj = meal;
+  previewCard = cardEl || null;
+
+  document.querySelectorAll('.meal-card, .fav-row').forEach(c => c.classList.remove('previewing'));
+  if (cardEl) cardEl.classList.add('previewing');
+
+  const macros = calcMacros(userProfile);
+  RING_DATA.forEach(({ prevId, r, trackerKey, macroKey }) => {
+    const el = document.getElementById(prevId);
+    if (!el) return;
+    const projected = (tracker[trackerKey] || 0) + (meal[macroKey] || 0);
+    const max = macros[macroKey] || 1;
+    const circ = 2 * Math.PI * r;
+    el.style.strokeDasharray = circ;
+    el.style.strokeDashoffset = circ * (1 - Math.min(projected / max, 1));
+    el.classList.add('show');
+  });
+
+  // centre readout jumps to the projected figure while previewing
+  const wouldBe = macros.calories
+    ? Math.min(Math.round(((tracker.cal + meal.calories) / macros.calories) * 100), 100)
+    : 0;
+  const pctEl = document.getElementById('ring-pct');
+  const lblEl = document.querySelector('.ring-pct-label');
+  if (pctEl) { pctEl.textContent = wouldBe + '%'; pctEl.classList.add('projected'); }
+  if (lblEl) lblEl.textContent = 'if you add this';
+
+  showMealImpact(meal, cardEl);
+
+  const rings = document.getElementById('ring-section');
+  if (!rings) return;
+  requestAnimationFrame(() => {
+    const navH = document.querySelector('nav').offsetHeight;
+    const y = rings.getBoundingClientRect().top + window.scrollY - navH - 12;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  });
+}
+
+function clearPreview() {
+  previewKey = null;
+  previewMealObj = null;
+  previewCard = null;
+  document.querySelectorAll('.ring-preview').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.meal-card, .fav-row').forEach(c => c.classList.remove('previewing'));
+  const el = document.getElementById('ring-impact');
+  if (el) el.classList.remove('show');
+  const pctEl = document.getElementById('ring-pct');
+  const lblEl = document.querySelector('.ring-pct-label');
+  if (pctEl) pctEl.classList.remove('projected');
+  if (lblEl) lblEl.textContent = 'of daily goal';
+  updateRings(); // restores the real percentage
+}
+
+// Spell out what the previewed meal would do to the day.
+function showMealImpact(meal, cardEl) {
+  const targets = calcMacros(userProfile);
+  const share = targets.calories ? Math.round((meal.calories / targets.calories) * 100) : 0;
+  const nowPct = targets.calories ? Math.round((tracker.cal / targets.calories) * 100) : 0;
+  const wouldBe = targets.calories
+    ? Math.min(Math.round(((tracker.cal + meal.calories) / targets.calories) * 100), 100)
+    : 0;
+
+  const el = document.getElementById('ring-impact');
+  if (!el) return;
+  const added = cardEl?.classList.contains('added');
+  el.innerHTML =
+    `<span class="impact-label">If you add this</span>` +
+    `<span class="impact-name">${meal.name}</span>` +
+    `<span class="impact-add">+${Math.round(meal.calories)} cal · +${Math.round(meal.protein)}g protein</span>` +
+    `<span class="impact-share">${share}% of your day — would take you from ${nowPct}% to ${wouldBe}%</span>` +
+    (added
+      ? `<span class="impact-done">✓ Already in your day</span>`
+      : `<button class="impact-confirm" onclick="confirmPreview()">Add to my day</button>`);
+  el.classList.add('show');
+}
+
+// Commit the previewed meal for real.
+function confirmPreview() {
+  const meal = previewMealObj;
+  const card = previewCard;
+  if (!meal) return;
+  if (card && card.classList.contains('added')) { clearPreview(); return; }
   tracker.cal += meal.calories;
   tracker.protein += meal.protein;
   tracker.carbs += meal.carbs;
   tracker.fat += meal.fat;
   tracker.cost += meal.cost;
+  if (card) card.classList.add('added');
   updateTrackerUI();
-  btn.textContent = '✓ Added';
-  btn.classList.add('added-state');
-  card.classList.add('added');
+  clearPreview();
 }
 
-function addAllMeals() {
-  // Add the first unadded meal from each type group
-  const seen = new Set();
+/* ---------- FAVOURITES ---------- */
+
+let favorites = [];
+
+function loadFavorites() {
+  try { favorites = JSON.parse(localStorage.getItem('culn_favorites')) || []; }
+  catch { favorites = []; }
+  renderFavorites();
+}
+
+function saveFavorites() {
+  localStorage.setItem('culn_favorites', JSON.stringify(favorites));
+}
+
+function favKey(meal) { return (meal.name || '').toLowerCase().trim(); }
+function isFavorite(meal) { return favorites.some(f => favKey(f) === favKey(meal)); }
+
+function toggleFavorite(mealIndex) {
+  const meal = currentMeals[mealIndex];
+  if (!meal) return;
+  const k = favKey(meal);
+  const at = favorites.findIndex(f => favKey(f) === k);
+  if (at >= 0) favorites.splice(at, 1);
+  else favorites.push({ ...meal });
+  saveFavorites();
+  renderFavorites();
+  syncFavButtons();
+}
+
+function removeFavorite(i) {
+  favorites.splice(i, 1);
+  saveFavorites();
+  renderFavorites();
+  syncFavButtons();
+}
+
+// keep the stars on the plan cards in sync with the saved list
+function syncFavButtons() {
   currentMeals.forEach((meal, i) => {
-    const type = (meal.type || '').toLowerCase();
-    if (!seen.has(type)) {
-      const btn = document.getElementById('add-btn-' + i);
-      const card = document.getElementById('meal-card-' + i);
-      if (btn && !btn.classList.contains('added-state')) {
-        addMealToTracker(i, btn, card);
-        seen.add(type);
-      }
-    }
+    const btn = document.getElementById('fav-btn-' + i);
+    if (btn) btn.classList.toggle('is-fav', isFavorite(meal));
   });
 }
+
+function renderFavorites() {
+  const wrap = document.getElementById('favorites-section');
+  const list = document.getElementById('favorites-list');
+  const count = document.getElementById('fav-count');
+  if (!wrap || !list) return;
+  if (count) count.textContent = favorites.length;
+
+  if (!favorites.length) {
+    list.innerHTML = `<p class="fav-empty">No saved meals yet — tap the ☆ on any meal to keep it here.</p>`;
+    return;
+  }
+  list.innerHTML = favorites.map((m, i) => `
+    <div class="fav-row" id="fav-row-${i}" onclick="onFavClick(event, ${i})" role="button" tabindex="0">
+      <div class="fav-row-main">
+        <div class="fav-row-name">${m.name}</div>
+        <div class="fav-row-macros">${Math.round(m.calories)} cal · ${Math.round(m.protein)}g protein · $${(m.cost || 0).toFixed(2)}</div>
+      </div>
+      <button class="fav-remove" title="Remove from favourites" onclick="event.stopPropagation(); removeFavorite(${i})">✕</button>
+    </div>`).join('');
+}
+
+function onFavClick(e, i) {
+  if (e.target.closest('.fav-remove')) return;
+  previewMeal(favorites[i], 'fav-' + i, document.getElementById('fav-row-' + i));
+}
+
+function toggleFavoritesPanel() {
+  const wrap = document.getElementById('favorites-section');
+  if (!wrap) return;
+  wrap.classList.add('show');
+  const navH = document.querySelector('nav').offsetHeight;
+  const y = wrap.getBoundingClientRect().top + window.scrollY - navH - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+
 
 function toggleMealGroup(type) {
   const group = document.getElementById('meal-group-' + type);
@@ -2863,7 +3291,7 @@ function mealCardHtml(meal, i) {
     `<div class="ingredient-item"><span>${ing.name}</span><span class="ingredient-amount">${ing.amount}</span></div>`
   ).join('');
   return `
-  <div class="meal-card" id="meal-card-${i}">
+  <div class="meal-card" id="meal-card-${i}" onclick="onMealCardClick(event, ${i})" role="button" tabindex="0">
     <div class="meal-card-top">
       <div class="meal-name">${meal.name}</div>
       <div class="meal-desc">${meal.description || ''}</div>
@@ -2900,7 +3328,8 @@ function mealCardHtml(meal, i) {
         <span>How to make it</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <button class="add-meal-btn" id="add-btn-${i}" onclick="addMealToTracker(${i}, this, document.getElementById('meal-card-${i}'))">Add to Day</button>
+      <button class="fav-btn" id="fav-btn-${i}" title="Save to favourites" onclick="event.stopPropagation(); toggleFavorite(${i})">★</button>
+      <span class="meal-add-hint">Tap to preview<span class="meal-added-mark">✓ Added to day</span></span>
     </div>
     ${ingredientsHtml ? `<div class="ingredients-list" id="ing-list-${i}">${ingredientsHtml}</div>` : ''}
     ${meal.instructions?.length ? `<div class="instructions-list" id="ins-list-${i}">${meal.instructions.map((step, n) => `<div class="instruction-step"><span class="instruction-step-num">${n+1}.</span><span>${step}</span></div>`).join('')}</div>` : ''}
@@ -2928,7 +3357,7 @@ function renderMeals(meals) {
     const label = typeLabels[key] || key.charAt(0).toUpperCase() + key.slice(1);
     const count = items.length;
     return `
-    <div class="meal-group open" id="meal-group-${key}">
+    <div class="meal-group" id="meal-group-${key}">
       <div class="meal-group-header" onclick="toggleMealGroup('${key}')">
         <div class="meal-group-header-left">
           <div class="meal-group-type-dot"></div>
@@ -2942,6 +3371,24 @@ function renderMeals(meals) {
       </div>
     </div>`;
   }).join('');
+
+  const jump = document.getElementById('jump-to-meals');
+  if (jump) jump.classList.add('show');
+  syncFavButtons();
+  clearPreview();
+  scrollToPlan();
+}
+
+// Bring the freshly generated plan into view — it renders below the ring hero,
+// which fills the screen, so otherwise nothing appears to happen on Generate.
+function scrollToPlan() {
+  const target = document.querySelector('.plan-header') || document.getElementById('meals-grid');
+  if (!target) return;
+  requestAnimationFrame(() => {
+    const navH = document.querySelector('nav').offsetHeight;
+    const y = target.getBoundingClientRect().top + window.scrollY - navH - 12;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  });
 }
 
 const loadingMessages = [

@@ -3408,6 +3408,10 @@ function getApiKey() {
   return key ? key.trim() : null;
 }
 
+// Serve a curated sample plan instead of calling the Claude API, so the hosted
+// demo works without anyone supplying an API key. Set to false for live generation.
+const DEMO_MODE = true;
+
 async function generatePlan() {
   const btn = document.getElementById('gen-btn');
   const macros = calcMacros(userProfile);
@@ -3496,7 +3500,7 @@ Respond ONLY with a valid JSON array. No preamble, no markdown, no backticks. Us
 ]`;
 
   // Demo mode — remove this block and uncomment getApiKey() when you have an API key
-  if (true) {
+  if (DEMO_MODE) {
     // 3 options per meal type, shown as grouped accordions
     const rawMeals = [
       { type: 'breakfast', name: 'Greek Yogurt & Berry Parfait', description: 'Creamy Greek yogurt layered with mixed berries and granola.', calories: 420, protein: 32, carbs: 48, fat: 9, cost: 3.20, prep_time: '5 min', ingredients: [{ name: 'Greek yogurt (2% fat)', amount: '200g' }, { name: 'Mixed berries', amount: '100g' }, { name: 'Low-sugar granola', amount: '40g' }, { name: 'Honey', amount: '1 tsp' }], instructions: ['Spoon Greek yogurt into a bowl or glass.', 'Layer mixed berries on top.', 'Sprinkle granola over the berries.', 'Drizzle with honey and serve immediately.'] },

@@ -2,6 +2,18 @@
 
 A mobile-first PWA for personalized meal planning and nutrition tracking.
 
+**Live demo: [culn.vercel.app](https://culn.vercel.app)**. Install it to your home screen on iOS or Android.
+
+## Screenshots
+
+<!-- Add screenshots to docs/screenshots/ and list them here, e.g.
+<p>
+  <img src="docs/screenshots/onboarding.png" width="240">
+  <img src="docs/screenshots/plan.png" width="240">
+  <img src="docs/screenshots/tracker.png" width="240">
+</p>
+-->
+
 ## Features
 
 - **Onboarding** — collects body stats, goals, dietary restrictions, budget, and cooking time
@@ -21,6 +33,10 @@ A mobile-first PWA for personalized meal planning and nutrition tracking.
 
 ## Running locally
 
-Just open `generator.html` in a browser. No server required.
+Just open `generator.html` in a browser. No server or build step required.
 
-To use real AI-generated meal plans, you'll need an [Anthropic API key](https://console.anthropic.com). Remove the `if (true)` demo block in `generatePlan()` and the app will prompt you for it on first use.
+### Demo mode vs. live generation
+
+The app ships with `DEMO_MODE = true` (in `generator.html`, just above `generatePlan()`), which serves a curated sample plan so the hosted demo works without an API key.
+
+To generate real plans with Claude, set `DEMO_MODE = false`. On first use the app asks for an [Anthropic API key](https://console.anthropic.com), which is stored only in the browser's `localStorage` and sent only to the Anthropic API.

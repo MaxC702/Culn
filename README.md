@@ -6,13 +6,13 @@ A mobile-first PWA for personalized meal planning and nutrition tracking.
 
 ## Screenshots
 
-<!-- Add screenshots to docs/screenshots/ and list them here, e.g.
-<p>
-  <img src="docs/screenshots/onboarding.png" width="240">
-  <img src="docs/screenshots/plan.png" width="240">
-  <img src="docs/screenshots/tracker.png" width="240">
+<p align="center">
+  <img src="docs/screenshots/landing.png" width="200" alt="Landing page: AI-generated meal plans tailored to your macros and budget">
+  <img src="docs/screenshots/dashboard.png" width="200" alt="Dashboard: daily calorie and macro targets with progress rings">
+  <img src="docs/screenshots/plan.png" width="200" alt="A generated day of meals, grouped by meal type with three options each">
+  <img src="docs/screenshots/rings.png" width="200" alt="Rings previewing what a meal adds to the day's totals before you log it">
 </p>
--->
+<p align="center"><em>Landing · daily targets · a generated plan · what a meal would add before you log it.</em></p>
 
 ## Features
 
